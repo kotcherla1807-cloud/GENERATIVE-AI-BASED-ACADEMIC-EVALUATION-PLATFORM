@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Students - Faculty Portal</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'faculty_home' %}" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i> Gen AI Academic
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="{% url 'faculty_home' %}"><i class="fas fa-home"></i> Faculty Home</a></li>
+                <li><a href="{% url 'faculty_students' %}"><i class="fas fa-list"></i> View Students</a></li>
+                <li><a href="{% url 'class_rankings' %}"><i class="fas fa-user-graduate"></i> Class Rankings</a></li>
+                <li><a href="{% url 'faculty_logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li>
+                    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2><i class="fas fa-users"></i> My Students</h2>
+            <a href="{% url 'add_student' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Student
+            </a>
+        </div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% if students %}
+        <div class="card">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> Roll No</th>
+                            <th><i class="fas fa-user"></i> Name</th>
+                            <th><i class="fas fa-envelope"></i> Email</th>
+                            <th><i class="fas fa-phone"></i> Mobile</th>
+                            <th><i class="fas fa-users"></i> Parent</th>
+                            <th><i class="fas fa-cog"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ student.rollnumber }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.studentmobile }}</td>
+                            <td>{{ student.parent_name }}</td>
+                            <td>
+                                <div class="action-btns">
+                                    <a href="{% url 'add_semester' student.id %}" class="btn btn-primary btn-small" title="Add Marks">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                    <a href="{% url 'view_student_semesters' student.id %}" class="btn btn-secondary btn-small" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'edit_student' student.id %}" class="btn btn-secondary btn-small" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'delete_student' student.id %}" class="btn btn-danger btn-small" title="Delete" onclick="return confirm('Are you sure?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <p style="text-align: center; padding: 40px;">
+                <i class="fas fa-user-plus" style="font-size: 3rem; color: #00ffd5; margin-bottom: 20px;"></i><br>
+                No students added yet.<br>
+                <a href="{% url 'add_student' %}" class="btn btn-primary" style="margin-top: 20px;">
+                    <i class="fas fa-plus"></i> Add First Student
+                </a>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Check saved theme on load
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.setAttribute('data-theme', 'light');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+        
+        // Toggle theme on click
+        themeToggle.addEventListener('click', function() {
+            if (document.body.getAttribute('data-theme') === 'light') {
+                document.body.removeAttribute('data-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>

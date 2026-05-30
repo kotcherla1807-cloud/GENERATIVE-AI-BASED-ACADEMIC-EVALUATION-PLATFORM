@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Semester Marks - Faculty Portal</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'faculty_home' %}" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i> Gen AI Academic
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="{% url 'faculty_home' %}"><i class="fas fa-home"></i> Faculty Home</a></li>
+                <li><a href="{% url 'faculty_students' %}"><i class="fas fa-list"></i> View Students</a></li>
+                <li><a href="{% url 'class_rankings' %}"><i class="fas fa-user-graduate"></i> Class Rankings</a></li>
+                <li><a href="{% url 'faculty_logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li>
+                    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div class="card" style="max-width: 900px; margin: 0 auto;">
+            <h2><i class="fas fa-plus-circle"></i> Add Semester Marks</h2>
+            <p>Student: <strong>{{ student.name }}</strong> ({{ student.rollnumber }})</p>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Semester Number</label>
+                        <input type="number" name="semester" class="form-control" placeholder="e.g., 1, 2, 3" required min="1" max="8">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Attendance (%)</label>
+                        <input type="number" name="attendance" class="form-control" placeholder="e.g., 85" required min="0" max="100" step="0.1">
+                    </div>
+                </div>
+                
+                <h4 style="margin: 30px 0 10px; color: #00ffd5;">Subject Marks</h4>
+                <p style="margin-bottom: 20px;">Add subjects, marks, and pass/fail status for this semester.</p>
+                
+                <div id="subjects-container">
+                    <div class="subject-row" style="margin-bottom: 15px; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <input type="text" name="subject" class="form-control" placeholder="Subject Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" name="marks" class="form-control" placeholder="Marks" required min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <select name="pass_fail" class="form-control" required>
+                                <option value="">Select</option>
+                                <option value="Pass">Pass</option>
+                                <option value="Fail">Fail</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-secondary" onclick="addSubject()" style="margin-bottom: 20px;">
+                    <i class="fas fa-plus"></i> Add Another Subject
+                </button>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-save"></i> Save & Send Email
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function addSubject() {
+            const container = document.getElementById('subjects-container');
+            const div = document.createElement('div');
+            div.className = 'subject-row';
+            div.style.marginBottom = '15px';
+            div.style.display = 'grid';
+            div.style.gridTemplateColumns = '2fr 1fr 1fr';
+            div.style.gap = '10px';
+            div.innerHTML = `
+                <div class="form-group">
+                    <input type="text" name="subject" class="form-control" placeholder="Subject Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="marks" class="form-control" placeholder="Marks" required min="0" max="100" step="0.1">
+                </div>
+                <div class="form-group">
+                    <select name="pass_fail" class="form-control" required>
+                        <option value="">Select</option>
+                        <option value="Pass">Pass</option>
+                        <option value="Fail">Fail</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+        
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Check saved theme on load
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.setAttribute('data-theme', 'light');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+        
+        // Toggle theme on click
+        themeToggle.addEventListener('click', function() {
+            if (document.body.getAttribute('data-theme') === 'light') {
+                document.body.removeAttribute('data-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>

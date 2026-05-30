@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Semester Results - Faculty Portal</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .subject-card {
+            background: var(--card-bg, linear-gradient(135deg, rgba(0,255,213,0.1), rgba(74,144,217,0.1)));
+            border: 1px solid var(--accent-color, #00ffd5);
+            padding: 20px;
+            border-radius: 15px;
+            width: calc(33.33% - 10px);
+            min-width: 200px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .subject-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 213, 0.2);
+        }
+        .subject-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--icon-bg, rgba(0,255,213,0.2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+        .subject-icon i {
+            color: var(--accent-color, #00ffd5);
+            font-size: 24px;
+        }
+        .subject-name {
+            color: var(--text-primary, #fff);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .marks-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-color, #00ffd5);
+            margin-bottom: 5px;
+        }
+        .marks-total {
+            color: var(--text-secondary, #888);
+            font-size: 14px;
+        }
+        .grade-display {
+            margin-bottom: 10px;
+        }
+        .pass-badge {
+            background: #28a745;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .fail-badge {
+            background: #dc3545;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        /* Light theme overrides */
+        [data-theme="light"] .subject-card {
+            background: linear-gradient(135deg, rgba(0,200,150,0.1), rgba(74,144,217,0.15));
+            border-color: #00a08a;
+        }
+        [data-theme="light"] .subject-icon {
+            background: rgba(0, 200, 150, 0.15);
+        }
+        [data-theme="light"] .subject-icon i {
+            color: #00a08a;
+        }
+        [data-theme="light"] .subject-name {
+            color: #1a1a2e;
+        }
+        [data-theme="light"] .marks-display {
+            color: #00a08a;
+        }
+        [data-theme="light"] .marks-total {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'faculty_home' %}" class="navbar-brand">
+                <i class="fas fa-graduation-cap"></i> Gen AI Academic
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="{% url 'faculty_home' %}"><i class="fas fa-home"></i> Faculty Home</a></li>
+                <li><a href="{% url 'faculty_students' %}"><i class="fas fa-list"></i> View Students</a></li>
+                <li><a href="{% url 'class_rankings' %}"><i class="fas fa-user-graduate"></i> Class Rankings</a></li>
+                <li><a href="{% url 'faculty_logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li>
+                    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div style="margin-bottom: 30px;">
+            <h2><i class="fas fa-user-graduate"></i> {{ student.name }} - Semester Results</h2>
+            <p><strong>Roll Number:</strong> {{ student.rollnumber }} | <strong>Email:</strong> {{ student.email }}</p>
+            <a href="{% url 'faculty_students' %}" class="btn btn-secondary" style="margin-top: 10px;">
+                <i class="fas fa-arrow-left"></i> Back to Students
+            </a>
+        </div>
+        
+        {% if semester_data %}
+            {% for data in semester_data %}
+            <div class="card" style="margin-bottom: 25px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0;"><i class="fas fa-calendar-alt"></i> Semester {{ data.semester.semester }}</h3>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <span style="background: var(--accent-color, #00ffd5); color: var(--badge-text, #000); padding: 5px 15px; border-radius: 20px;">
+                            <i class="fas fa-user-check"></i> Attendance: {{ data.semester.attendance }}%
+                        </span>
+                        <span style="background: #4a90d9; color: #fff; padding: 5px 15px; border-radius: 20px;">
+                            <i class="fas fa-chart-line"></i> Average: {{ data.average|floatformat:1 }}%
+                        </span>
+                        <button class="btn btn-secondary" onclick="openEditModal('{{ data.semester.id }}', '{{ student.id }}')" style="padding: 5px 12px;">
+                            <i class="fas fa-edit"></i> Edit Marks
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+                    {% for mark in data.marks %}
+                    <div class="subject-card">
+                        <div class="subject-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="subject-name">{{ mark.subject }}</div>
+                        <div class="marks-display">{{ mark.marks }}<span class="marks-total">/100</span></div>
+                        <div class="grade-display">
+                            {% if mark.marks >= 90 %}<span style="color: #00ffd5; font-weight: bold;">A+</span>
+                            {% elif mark.marks >= 80 %}<span style="color: #00ffd5; font-weight: bold;">A</span>
+                            {% elif mark.marks >= 70 %}<span style="color: #4ecdc4; font-weight: bold;">B+</span>
+                            {% elif mark.marks >= 60 %}<span style="color: #4ecdc4; font-weight: bold;">B</span>
+                            {% elif mark.marks >= 50 %}<span style="color: #ffd93d; font-weight: bold;">C</span>
+                            {% elif mark.marks >= 35 %}<span style="color: #ff6b6b; font-weight: bold;">D</span>
+                            {% else %}<span style="color: #ff6b6b; font-weight: bold;">F</span>{% endif %}
+                        </div>
+                        {% if mark.pass_fail == 'Pass' %}
+                        <span class="pass-badge">Pass</span>
+                        {% else %}
+                        <span class="fail-badge">Fail</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="card" style="text-align: center; padding: 50px;">
+            <i class="fas fa-folder-open" style="font-size: 4rem; color: #00ffd5; margin-bottom: 20px;"></i>
+            <h3>No Semester Records Found</h3>
+            <p>No semester results have been added for this student yet.</p>
+            <a href="{% url 'add_semester' student.id %}" class="btn btn-primary" style="margin-top: 15px;">
+                <i class="fas fa-plus"></i> Add First Semester
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Edit Marks Modal -->
+    <div id="editMarksModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-secondary, #1a1a2e); padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit Semester Marks</h3>
+            <form method="POST" action="{% url 'update_semester_marks' %}" id="editMarksForm">
+                {% csrf_token %}
+                <input type="hidden" name="semester_id" id="semesterId">
+                <input type="hidden" name="student_id" value="{{ student.id }}">
+                
+                <div class="form-group">
+                    <label class="form-label">Attendance (%)</label>
+                    <input type="number" name="attendance" id="editAttendance" class="form-control" min="0" max="100" required>
+                </div>
+                
+                <div id="subjectMarksContainer">
+                    <!-- Subject marks will be dynamically added here -->
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> Update Marks
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeEditModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Check saved theme on load
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.setAttribute('data-theme', 'light');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+        
+        // Toggle theme on click
+        themeToggle.addEventListener('click', function() {
+            if (document.body.getAttribute('data-theme') === 'light') {
+                document.body.removeAttribute('data-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+        
+        // Semester data passed from Django
+        var semesterData = [];
+        try {
+            semesterData = JSON.parse('{{ semester_data_json|escapejs }}');
+        } catch(e) {
+            console.log('Error parsing semester data');
+        }
+        
+        function openEditModal(semesterId, studentId) {
+            document.getElementById('semesterId').value = semesterId;
+            document.getElementById('editMarksModal').style.display = 'block';
+            
+            // Find the semester data
+            const semData = semesterData.find(s => s.semester.id === parseInt(semesterId));
+            
+            if (semData) {
+                document.getElementById('editAttendance').value = semData.semester.attendance;
+                
+                const container = document.getElementById('subjectMarksContainer');
+                container.innerHTML = '';
+                
+                semData.marks.forEach((mark, index) => {
+                    const html = `
+                        <div style="margin-bottom: 15px; padding: 15px; background: var(--bg-primary, #0f0f23); border-radius: 8px;">
+                            <div class="form-group">
+                                <label class="form-label">Subject ${index + 1}</label>
+                                <input type="text" name="subject_${mark.id}" class="form-control" value="${mark.subject}" required>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Marks (0-100)</label>
+                                    <input type="number" name="marks_${mark.id}" class="form-control" value="${mark.marks}" min="0" max="100" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Pass/Fail</label>
+                                    <select name="pass_fail_${mark.id}" class="form-control" required>
+                                        <option value="Pass" ${mark.pass_fail === 'Pass' ? 'selected' : ''}>Pass</option>
+                                        <option value="Fail" ${mark.pass_fail === 'Fail' ? 'selected' : ''}>Fail</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" name="mark_ids" value="${mark.id}">
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            }
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editMarksModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editMarksModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
